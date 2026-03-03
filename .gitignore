@@ -1,0 +1,14 @@
+backend/venv/
+backend/uploads/
+backend/data/
+backend/__pycache__/
+backend/*.log
+frontend/node_modules/
+frontend/.next/
+frontend/.env
+frontend/.env.local
+frontend/.env.*
+reference/node_modules/
+project_backup.zip
+*.log
+.vscode/
