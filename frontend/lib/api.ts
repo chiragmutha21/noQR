@@ -24,6 +24,10 @@ export interface ARContent {
         keypointsCount: number;
         fileSize: number;
     };
+    analytics?: {
+        totalScans: number;
+        countryScans: Record<string, number>;
+    };
 }
 
 // ── Step 2: Attached content types ──────────────────────────────────────

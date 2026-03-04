@@ -30,28 +30,25 @@ const Sidebar = () => {
     return (
         <>
             {/* Mobile Top Bar */}
+            {/* Mobile Top Bar - Simplified Header */}
             <div className={cn(
-                "lg:hidden fixed top-0 left-0 right-0 h-20 flex items-center justify-between px-6 z-[60] transition-all duration-300",
-                isDashboard ? "bg-black/80 backdrop-blur-xl border-b border-white/5 opacity-100" : "bg-transparent border-none pointer-events-none opacity-0"
+                "lg:hidden fixed top-0 left-0 right-0 h-10 sm:h-16 flex items-center justify-between px-3 sm:px-6 z-[60] bg-black/80 backdrop-blur-xl border-b border-white/5",
+                !isDashboard && "opacity-0 pointer-events-none"
             )}>
-                {isDashboard && (
-                    <>
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20">
-                                <Scan className="w-5 h-5 text-white" />
-                            </div>
-                            <span className="font-black text-sm tracking-widest uppercase italic text-white flex items-center gap-2">
-                                Vision <span className="text-blue-500">Control</span>
-                            </span>
-                        </div>
-                        <button
-                            onClick={toggleSidebar}
-                            className="p-3 bg-zinc-900 rounded-xl text-zinc-400 pointer-events-auto active:scale-95 transition-transform"
-                        >
-                            {isOpen ? <CloseIcon className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-                        </button>
-                    </>
-                )}
+                <div className="flex items-center gap-2 sm:gap-3 mb-1 sm:mb-0">
+                    <div className="w-5 h-5 sm:w-8 sm:h-8 bg-blue-600 rounded-sm sm:rounded-lg flex items-center justify-center overflow-hidden flex-shrink-0">
+                        <img src="/logo.png" alt="Logo" className="w-full h-full object-cover scale-110" />
+                    </div>
+                    <span className="font-black text-[13px] sm:text-xl tracking-tighter uppercase italic text-white flex items-center gap-1 sm:gap-2 leading-none mt-0.5">
+                        RevealAR
+                    </span>
+                </div>
+                <button
+                    onClick={toggleSidebar}
+                    className="p-1 sm:p-2 text-white active:scale-90 transition-transform mb-1 sm:mb-0"
+                >
+                    <Menu className="w-4 h-4 sm:w-6 sm:h-6" />
+                </button>
             </div>
 
             {/* Backdrop for mobile */}
@@ -73,11 +70,11 @@ const Sidebar = () => {
                 {/* Logo Section */}
                 <div className="p-8">
                     <div className="flex items-center gap-4 py-4 px-2">
-                        <div className="w-12 h-12 bg-blue-600 rounded-2xl flex items-center justify-center text-white shadow-2xl shadow-blue-500/40">
-                            <Scan className="w-6 h-6" />
+                        <div className="w-12 h-12 bg-blue-600 rounded-2xl flex items-center justify-center text-white shadow-2xl shadow-blue-500/40 overflow-hidden">
+                            <img src="/logo.png" alt="Logo" className="w-full h-full object-cover scale-110" />
                         </div>
                         <div>
-                            <span className="block font-black text-xl tracking-tighter uppercase italic text-white leading-none">Vision</span>
+                            <span className="block font-black text-xl tracking-tighter uppercase italic text-white leading-none">RevealAR</span>
                             <div className="flex items-center gap-1.5 mt-1">
                                 <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-ping" />
                                 <span className="text-[10px] font-bold text-zinc-500 tracking-[0.2em] uppercase">Core Online</span>

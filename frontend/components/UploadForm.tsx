@@ -174,22 +174,22 @@ export default function UploadForm() {
     }
 
     return (
-        <div className="max-w-2xl mx-auto space-y-8 pb-20">
+        <div className="max-w-2xl mx-auto space-y-4 sm:space-y-8 pb-10 sm:pb-20">
 
-            <div className="space-y-6">
+            <div className="space-y-3 sm:space-y-6">
                 {/* Image Upload */}
-                <div className="space-y-4">
+                <div className="space-y-2 sm:space-y-4">
                     <div className="flex items-center justify-between ml-1">
-                        <label className="text-sm font-bold text-zinc-500 uppercase tracking-widest">1. Target Image (The trigger)</label>
+                        <label className="text-[9px] sm:text-sm font-bold text-zinc-500 uppercase tracking-widest">1. Target Image (The trigger)</label>
                         <button
                             type="button"
                             onClick={() => {
                                 const camInput = document.getElementById('camera-input');
                                 if (camInput) camInput.click();
                             }}
-                            className="flex lg:hidden items-center gap-2 px-4 py-2 bg-blue-600/10 text-blue-400 rounded-xl text-[10px] font-black uppercase tracking-tighter hover:bg-blue-600/20 transition-all border border-blue-500/10"
+                            className="flex lg:hidden items-center gap-1 sm:gap-2 px-2 sm:px-4 py-1 sm:py-2 bg-blue-600/10 text-blue-400 rounded-lg sm:rounded-xl text-[8px] sm:text-[10px] font-black uppercase tracking-tighter hover:bg-blue-600/20 transition-all border border-blue-500/10"
                         >
-                            <Scan className="w-3.5 h-3.5" />
+                            <Scan className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5" />
                             Take Photo
                         </button>
                     </div>
@@ -212,9 +212,9 @@ export default function UploadForm() {
                     <div
                         {...getImageProps()}
                         className={cn(
-                            "h-56 rounded-[32px] border-2 border-dashed flex flex-col items-center justify-center cursor-pointer transition-all duration-300 overflow-hidden relative group",
+                            "h-32 sm:h-56 rounded-[20px] sm:rounded-[32px] border-2 border-dashed flex flex-col items-center justify-center cursor-pointer transition-all duration-300 overflow-hidden relative group",
                             isImageDrag ? "border-blue-500 bg-blue-500/5 transition-opacity duration-300" : "border-zinc-800 hover:border-zinc-700 bg-zinc-900/50",
-                            image ? "border-solid border-blue-500/50 shadow-[0_0_40px_rgba(59,130,246,0.1)]" : ""
+                            image ? "border-solid border-blue-500/50 shadow-[0_0_20px_rgba(59,130,246,0.1)]" : ""
                         )}
                     >
                         <input {...getImageInput()} />
@@ -222,22 +222,22 @@ export default function UploadForm() {
                             <div className="absolute inset-0 w-full h-full">
                                 <img src={URL.createObjectURL(image)} className="w-full h-full object-cover" alt="Preview" />
                                 <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm">
-                                    <div className="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center mb-2">
-                                        <Plus className="w-6 h-6 text-white" />
+                                    <div className="w-8 h-8 sm:w-12 sm:h-12 bg-white/10 rounded-full flex items-center justify-center mb-1 sm:mb-2">
+                                        <Plus className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
                                     </div>
-                                    <p className="text-white text-[10px] font-black uppercase tracking-widest">Change Target</p>
+                                    <p className="text-white text-[7px] sm:text-[10px] font-black uppercase tracking-widest">Change Target</p>
                                 </div>
                             </div>
                         ) : (
-                            <div className="flex flex-col items-center p-8 text-center">
-                                <div className="w-14 h-14 bg-zinc-800/50 rounded-2xl flex items-center justify-center mb-4 text-zinc-500 group-hover:text-blue-400 transition-all group-hover:scale-110 group-hover:rotate-3 shadow-inner">
-                                    <FileImage className="w-6 h-6" />
+                            <div className="flex flex-col items-center p-2 sm:p-8 text-center">
+                                <div className="w-8 h-8 sm:w-14 sm:h-14 bg-zinc-800/50 rounded-lg sm:rounded-2xl flex items-center justify-center mb-2 sm:mb-4 text-zinc-500 group-hover:text-blue-400 transition-all group-hover:scale-110 group-hover:rotate-3 shadow-inner">
+                                    <FileImage className="w-4 h-4 sm:w-6 sm:h-6" />
                                 </div>
-                                <p className="text-sm font-bold text-zinc-200">Drop your physical photo here</p>
-                                <p className="text-[10px] text-zinc-600 uppercase tracking-[0.2em] mt-2 font-medium">PNG, JPG up to 10MB</p>
-                                <div className="mt-4 flex flex-wrap justify-center gap-2">
-                                    <span className="px-3 py-1 bg-zinc-800/50 rounded-lg text-[9px] font-bold text-zinc-500">BROWSE FILES</span>
-                                    <span className="lg:hidden px-3 py-1 bg-blue-500/10 rounded-lg text-[9px] font-bold text-blue-500">OPEN CAMERA</span>
+                                <p className="text-[10px] sm:text-sm font-bold text-zinc-200">Drop your physical photo here</p>
+                                <p className="text-[7px] sm:text-[10px] text-zinc-600 uppercase tracking-[0.2em] mt-1 sm:mt-2 font-medium">PNG, JPG up to 10MB</p>
+                                <div className="mt-2 sm:mt-4 flex flex-wrap justify-center gap-1 sm:gap-2">
+                                    <span className="px-2 py-1 sm:px-3 sm:py-1 bg-zinc-800/50 rounded-md sm:rounded-lg text-[7px] sm:text-[9px] font-bold text-zinc-500">BROWSE FILES</span>
+                                    <span className="lg:hidden px-2 py-1 sm:px-3 sm:py-1 bg-blue-500/10 rounded-md sm:rounded-lg text-[7px] sm:text-[9px] font-bold text-blue-500">OPEN CAMERA</span>
                                 </div>
                             </div>
                         )}
@@ -245,11 +245,11 @@ export default function UploadForm() {
                 </div>
 
                 {/* Content Section */}
-                <div className="space-y-4">
-                    <label className="text-sm font-bold text-zinc-500 uppercase tracking-widest ml-1">2. Content to Show</label>
+                <div className="space-y-3 sm:space-y-4">
+                    <label className="text-[9px] sm:text-sm font-bold text-zinc-500 uppercase tracking-widest ml-1">2. Content to Show</label>
 
                     {/* Content Type Tabs */}
-                    <div className="flex gap-2 p-1 bg-zinc-900/50 border border-zinc-800 rounded-2xl overflow-x-auto no-scrollbar">
+                    <div className="flex gap-1.5 sm:gap-2 p-1 bg-zinc-900/50 border border-zinc-800 rounded-xl sm:rounded-2xl overflow-x-auto no-scrollbar">
                         {CONTENT_TYPES.map(ct => {
                             const Icon = ct.icon;
                             return (
@@ -257,39 +257,39 @@ export default function UploadForm() {
                                     key={ct.id}
                                     onClick={() => { setContentType(ct.id); setContentFile(null); setContentUrl(''); setContentText(''); }}
                                     className={cn(
-                                        "flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap",
+                                        "flex items-center gap-1 sm:gap-2 px-2 py-1 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl text-[9px] sm:text-xs font-bold transition-all whitespace-nowrap",
                                         contentType === ct.id
                                             ? "bg-zinc-800 text-white shadow-lg"
                                             : "text-zinc-500 hover:text-zinc-300"
                                     )}
                                 >
-                                    <Icon className={cn("w-4 h-4", contentType === ct.id ? ct.color : "")} />
+                                    <Icon className={cn("w-3 h-3 sm:w-4 sm:h-4", contentType === ct.id ? ct.color : "")} />
                                     {ct.label}
                                 </button>
                             );
                         })}
                     </div>
 
-                    <div className="bg-zinc-900/30 border border-zinc-800 rounded-[32px] p-6 space-y-4">
+                    <div className="bg-zinc-900/30 border border-zinc-800 rounded-[20px] sm:rounded-[32px] p-3 sm:p-6 space-y-2 sm:space-y-4">
                         {/* file vs link vs text logic */}
                         {contentType === 'text' ? (
-                            <div className="space-y-1.5">
-                                <span className="text-[10px] text-zinc-500 uppercase font-bold tracking-widest ml-1">Message Body</span>
+                            <div className="space-y-1 sm:space-y-1.5">
+                                <span className="text-[8px] sm:text-[10px] text-zinc-500 uppercase font-bold tracking-widest ml-1">Message Body</span>
                                 <textarea
                                     placeholder="Write something that will appear when scanned..."
                                     value={contentText}
                                     onChange={(e) => setContentText(e.target.value)}
                                     rows={4}
-                                    className="w-full bg-black/50 border border-zinc-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 resize-none min-h-[120px]"
+                                    className="w-full bg-black/50 border border-zinc-800 rounded-lg sm:rounded-xl px-2.5 py-2 sm:px-4 sm:py-3 text-[10px] sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 resize-none min-h-[80px] sm:min-h-[120px]"
                                 />
                             </div>
                         ) : (
                             <>
-                                <div className="flex items-center justify-between mb-2">
-                                    <span className="text-[10px] text-zinc-500 uppercase font-bold tracking-widest ml-1">Source</span>
-                                    <div className="flex bg-black/40 p-1 rounded-lg border border-zinc-800">
-                                        <button onClick={() => setMode('file')} className={cn("px-2 py-1 text-[10px] font-bold rounded", mode === 'file' ? "bg-zinc-700" : "text-zinc-500")}>File</button>
-                                        <button onClick={() => setMode('link')} className={cn("px-2 py-1 text-[10px] font-bold rounded", mode === 'link' ? "bg-zinc-700" : "text-zinc-500")}>URL</button>
+                                <div className="flex items-center justify-between mb-1 sm:mb-2">
+                                    <span className="text-[8px] sm:text-[10px] text-zinc-500 uppercase font-bold tracking-widest ml-1">Source</span>
+                                    <div className="flex bg-black/40 p-0.5 sm:p-1 rounded-md sm:rounded-lg border border-zinc-800">
+                                        <button onClick={() => setMode('file')} className={cn("px-1.5 py-0.5 sm:px-2 sm:py-1 text-[8px] sm:text-[10px] font-bold rounded", mode === 'file' ? "bg-zinc-700" : "text-zinc-500")}>File</button>
+                                        <button onClick={() => setMode('link')} className={cn("px-1.5 py-0.5 sm:px-2 sm:py-1 text-[8px] sm:text-[10px] font-bold rounded", mode === 'link' ? "bg-zinc-700" : "text-zinc-500")}>URL</button>
                                     </div>
                                 </div>
 
@@ -297,24 +297,24 @@ export default function UploadForm() {
                                     <div
                                         {...getFileProps()}
                                         className={cn(
-                                            "h-32 rounded-2xl border-2 border-dashed flex flex-col items-center justify-center cursor-pointer transition-all duration-300",
+                                            "h-20 sm:h-32 rounded-xl sm:rounded-2xl border-2 border-dashed flex flex-col items-center justify-center cursor-pointer transition-all duration-300",
                                             isFileDrag ? "border-blue-500 bg-blue-500/5" : "border-zinc-800 bg-black/30",
                                             contentFile ? "border-green-500/50" : ""
                                         )}
                                     >
                                         <input {...getFileInput()} />
                                         {contentFile ? (
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-8 h-8 bg-green-500/20 text-green-500 rounded-lg flex items-center justify-center">
-                                                    <File className="w-4 h-4" />
+                                            <div className="flex items-center gap-1.5 sm:gap-3 px-2">
+                                                <div className="w-5 h-5 sm:w-8 sm:h-8 bg-green-500/20 text-green-500 rounded-md sm:rounded-lg flex shrink-0 items-center justify-center">
+                                                    <File className="w-2.5 h-2.5 sm:w-4 sm:h-4" />
                                                 </div>
-                                                <span className="text-sm font-medium text-zinc-200 truncate max-w-[200px]">{contentFile.name}</span>
-                                                <button onClick={(e) => { e.stopPropagation(); setContentFile(null); }} className="p-1 hover:bg-zinc-800 rounded-full text-zinc-500"><X className="w-3 h-3" /></button>
+                                                <span className="text-[9px] sm:text-sm font-medium text-zinc-200 truncate max-w-[120px] sm:max-w-[200px]">{contentFile.name}</span>
+                                                <button onClick={(e) => { e.stopPropagation(); setContentFile(null); }} className="p-0.5 sm:p-1 hover:bg-zinc-800 rounded-full text-zinc-500 shrink-0"><X className="w-2.5 h-2.5 sm:w-3 sm:h-3" /></button>
                                             </div>
                                         ) : (
                                             <div className="text-center">
-                                                <Upload className="w-5 h-5 text-zinc-600 mx-auto mb-2" />
-                                                <p className="text-xs text-zinc-500 font-medium">Click or drag {contentType} file</p>
+                                                <Upload className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-zinc-600 mx-auto mb-1 sm:mb-2" />
+                                                <p className="text-[8px] sm:text-xs text-zinc-500 font-medium">Click or drag {contentType}</p>
                                             </div>
                                         )}
                                     </div>
@@ -322,7 +322,7 @@ export default function UploadForm() {
                                     <input
                                         type="url"
                                         placeholder={`https://.../${contentType}${contentType === 'video' ? '.mp4' : (contentType === 'audio' ? '.mp3' : '')}`}
-                                        className="w-full bg-black/50 border border-zinc-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 font-mono text-blue-400"
+                                        className="w-full bg-black/50 border border-zinc-800 rounded-lg sm:rounded-xl px-2.5 py-2 sm:px-4 sm:py-3 text-[9px] sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 font-mono text-blue-400"
                                         value={contentUrl}
                                         onChange={(e) => setContentUrl(e.target.value)}
                                     />
@@ -337,7 +337,7 @@ export default function UploadForm() {
                 onClick={handleSubmit}
                 disabled={uploading || !isReady}
                 className={cn(
-                    "w-full py-5 rounded-[24px] font-bold text-base flex items-center justify-center gap-3 transition-all active:scale-[0.98] shadow-2xl",
+                    "w-full py-3 sm:py-5 rounded-[16px] sm:rounded-[24px] font-bold text-[10px] sm:text-base flex items-center justify-center gap-1.5 sm:gap-3 transition-all active:scale-[0.98] shadow-2xl",
                     uploading || !isReady
                         ? "bg-zinc-800 text-zinc-500 cursor-not-allowed"
                         : "bg-blue-600 hover:bg-blue-500 text-white shadow-blue-600/20"
@@ -345,12 +345,12 @@ export default function UploadForm() {
             >
                 {uploading ? (
                     <>
-                        <Loader2 className="w-6 h-6 animate-spin" />
+                        <Loader2 className="w-3.5 h-3.5 sm:w-6 sm:h-6 animate-spin" />
                         Generating Explorer Layer...
                     </>
                 ) : (
                     <>
-                        <Scan className="w-6 h-6" />
+                        <Scan className="w-3.5 h-3.5 sm:w-6 sm:h-6" />
                         ACTIVATE EXPLORER TARGET
                     </>
                 )}

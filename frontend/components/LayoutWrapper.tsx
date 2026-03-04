@@ -2,6 +2,7 @@
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import Sidebar from './Sidebar';
+import BottomNav from './BottomNav';
 
 export default function LayoutWrapper({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
@@ -13,12 +14,13 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
             <Sidebar />
             <main className={cn(
                 "flex-1 lg:ml-72 min-h-screen transition-all",
-                isDashboard ? "p-4 md:p-8 pt-20 lg:pt-8" :
+                isDashboard ? "p-4 md:p-8 pt-12 lg:pt-8 pb-32 lg:pb-8" :
                     isFullScreen ? "p-0" :
-                        "p-4 md:p-8 pt-4 lg:pt-8"
+                        "p-4 md:p-8 pt-4 lg:pt-8 pb-20 lg:pb-8"
             )}>
                 {children}
             </main>
+            <BottomNav />
         </div>
     );
 }

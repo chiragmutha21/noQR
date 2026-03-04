@@ -163,7 +163,7 @@ export default function ARViewer() {
                 {loading && (
                     <div className="absolute inset-0 z-[60] flex flex-col items-center justify-center bg-black text-white">
                         <Loader2 className="w-10 h-10 animate-spin text-blue-500 mb-4" />
-                        <p className="font-mono text-sm tracking-widest uppercase">Initializing Vision Engine</p>
+                        <p className="font-mono text-sm tracking-widest uppercase">Initializing RevealAR Engine</p>
                     </div>
                 )}
 

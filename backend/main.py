@@ -11,8 +11,10 @@ from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from dotenv import load_dotenv
 
+import asyncio
 from database import connect_db, disconnect_db
 from routes import router
+from cleanup_utils import cleanup_orphaned_files, start_periodic_cleanup
 
 load_dotenv()
 
@@ -25,6 +27,11 @@ async def lifespan(app: FastAPI):
     for sub in ["images", "videos", "audio", "pdfs"]:
         os.makedirs(os.path.join(UPLOAD_DIR, sub), exist_ok=True)
     os.makedirs("data", exist_ok=True)
+    
+    # Run initial cleanup and schedule periodic one
+    asyncio.create_task(cleanup_orphaned_files())
+    asyncio.create_task(start_periodic_cleanup(3600)) # once per hour
+    
     print("Server ready.")
     yield
     await disconnect_db()
@@ -38,17 +45,7 @@ app = FastAPI(
 # CORS — robust configuration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",
-        "http://127.0.0.1:3000",
-        "http://192.168.1.34:3000",
-        "http://192.168.1.34.nip.io:3000",
-        "http://192.168.1.37:3000",
-        "http://192.168.1.37.nip.io:3000",
-        "http://localhost:5000",
-        "http://127.0.0.1:5000",
-    ],
-    allow_origin_regex=r"http://192\.168\.\d{1,3}\.\d{1,3}(\.nip\.io)?(:\d{1,5})?", # Support both IP and nip.io
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

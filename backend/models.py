@@ -12,6 +12,12 @@ class ContentMetadata(BaseModel):
     fileSize: int = 0
 
 
+class TargetAnalytics(BaseModel):
+    """Analytics for the AR Target."""
+    totalScans: int = 0
+    countryScans: dict = {}
+
+
 class ARContentResponse(BaseModel):
     """Response schema for a content item (mirrors reference API contract)."""
     id: str = Field(alias="_id", default="")
@@ -28,6 +34,7 @@ class ARContentResponse(BaseModel):
     title: Optional[str] = ""
     text: Optional[str] = ""
     url: Optional[str] = ""
+    analytics: Optional[TargetAnalytics] = Field(default_factory=TargetAnalytics)
 
     class Config:
         populate_by_name = True

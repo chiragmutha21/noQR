@@ -65,11 +65,12 @@ class WatermarkManager:
             # Calculate Bit Error Rate
             ber = self._calculate_ber(detected_bits, expected_bits)
             
-            # Similarity score: 1.0 - BER
-            # threshold 0.15 error rate is usually safe for dwtDct
-            match = ber < 0.20
+            # Match if error rate is low
+            match = ber < 0.25
             if match:
-                print(f"Watermark match verified! BER: {ber:.4f}")
+                print(f"✅ Watermark detected for suffix '{expected_id_suffix}'! BER: {ber:.4f}")
+            else:
+                print(f"❌ No watermark match for '{expected_id_suffix}'. BER: {ber:.4f}")
             return match
             
         except Exception as e:

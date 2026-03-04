@@ -7,7 +7,7 @@ import { Toaster } from "react-hot-toast";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "AR Vision Control | Admin",
+  title: "RevealAR | Admin",
   description: "Next-gen AR content management system",
 };
 

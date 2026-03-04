@@ -19,8 +19,10 @@ import shutil
 from datetime import datetime, timezone
 import numpy as np
 
-from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Request
+from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Request, BackgroundTasks
 from typing import Optional, List
+import json
+import urllib.request
 
 from database import get_images_collection, get_attached_contents_collection
 from models import (
@@ -55,6 +57,35 @@ def _ensure_dirs():
 
 
 _ensure_dirs()
+
+def get_country_for_ip(ip: str):
+    if not ip or ip == "127.0.0.1" or ip.startswith("192.168.") or ip == "::1":
+        return "India" # Treat local network traffic as 'India' for testing purposes
+    try:
+        url = f"http://ip-api.com/json/{ip}"
+        req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+        with urllib.request.urlopen(req, timeout=2) as response:
+            data = json.loads(response.read().decode())
+            if data and data.get("status") == "success":
+                return data.get("country", "Unknown")
+    except Exception as e:
+        print(f"IP Geo lookup failed: {e}")
+    return "Unknown"
+
+async def record_scan_analytics(content_id: str, ip: str):
+    try:
+        country = get_country_for_ip(ip)
+        col = get_images_collection()
+        # MongoDB will create the fields automatically if they don't exist
+        await col.update_one(
+            {"contentId": content_id},
+            {"$inc": {
+                "analytics.totalScans": 1,
+                f"analytics.countryScans.{country}": 1
+            }}
+        )
+    except Exception as e:
+        print(f"Failed to record analytics: {e}")
 
 
 async def _save_upload(file: UploadFile, subfolder: str) -> tuple[str, str]:
@@ -187,6 +218,10 @@ async def upload_content(
         "url": final_url,
         "user_email": user_email, # Store the uploader's email
         "descriptorPath": "",
+        "analytics": {
+            "totalScans": 0,
+            "countryScans": {}
+        },
         "metadata": {
             "keypointsCount": EMBEDDING_DIM,
             "fileSize": file.size if file and file.size else 0,
@@ -512,6 +547,8 @@ async def delete_attached_content(attachment_id: str):
     return {"message": "Attachment deleted successfully"}
 @router.post("/scan", response_model=ScanResponse)
 async def scan_frame(
+    request: Request,
+    background_tasks: BackgroundTasks,
     frame: UploadFile = File(...),
 ):
     """
@@ -596,6 +633,10 @@ async def scan_frame(
         async for att_doc in cursor:
             att_doc["_id"] = str(att_doc.get("_id", ""))
             attachments.append(AttachedContentResponse(**att_doc))
+
+        # Record scan in background
+        client_ip = request.client.host if request.client else "127.0.0.1"
+        background_tasks.add_task(record_scan_analytics, content_id, client_ip)
 
         return ScanResponse(
             matchFound=True,
