@@ -32,11 +32,16 @@ CD /D "%~dp0frontend"
 echo [*] Installing/Updating Frontend dependencies...
 call npm install
 
+echo [*] Installing/Updating Scanner App dependencies...
+CD /D "%~dp0scanner-app"
+call npm install
+
 :: 4. Launching Servers
 echo.
 echo [4/4] Launching Background Servers...
 start "Backend Server" cmd /k "CD /D %~dp0backend && venv\Scripts\activate && python main.py"
-start "Frontend Server" cmd /k "CD /D %~dp0frontend && npm run dev"
+start "Frontend Dashboard" cmd /k "CD /D %~dp0frontend && npm run dev"
+start "Scanner App" cmd /k "CD /D %~dp0scanner-app && npm run dev"
 
 echo.
 echo ======================================================
@@ -50,4 +55,3 @@ echo.
 echo    Keep this window open or close it. 
 echo    The servers are now running in separate windows.
 echo ======================================================
-pause

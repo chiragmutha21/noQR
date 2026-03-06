@@ -1,0 +1,84 @@
+{
+  "contents": [
+    {
+      "contentId": "bc03a093-e9d9-4f58-b88d-df2b12071264",
+      "originalImageName": "WhatsApp Image 2026-03-02 at 5.09.49 PM.jpeg",
+      "imagePath": "/uploads/images/WhatsApp_Image_2026-03-02_at_5_09_49_PM-1772792671-98c92161.jpeg",
+      "videoPath": "https://youtu.be/ZTKEZ0MD-0I?si=kz5BFiAMwAxFKv36",
+      "videoType": "link",
+      "type": "video",
+      "title": "",
+      "text": "",
+      "url": "https://youtu.be/ZTKEZ0MD-0I?si=kz5BFiAMwAxFKv36",
+      "user_email": "chiragmutha31@gmail.com",
+      "descriptorPath": "",
+      "analytics": {
+        "totalScans": 1,
+        "countryScans": {
+          "India": 1
+        },
+        "engagementTime": 22.893,
+        "ctaClicks": 1
+      },
+      "metadata": {
+        "keypointsCount": 2048,
+        "fileSize": 0
+      },
+      "createdAt": "2026-03-06T10:24:34.906053+00:00",
+      "_id": "mock_contents_0"
+    },
+    {
+      "contentId": "9343242c-2b70-49f3-8f53-c439e91698a3",
+      "originalImageName": "WhatsApp Image 2026-03-02 at 5.09.49 PM.jpeg",
+      "imagePath": "/uploads/images/WhatsApp_Image_2026-03-02_at_5_09_49_PM-1772792799-d1603c39.jpeg",
+      "videoPath": "https://youtu.be/zpxrYw9vJps?si=hHtJw1apdrmavkzv",
+      "videoType": "link",
+      "type": "video",
+      "title": "",
+      "text": "",
+      "url": "https://youtu.be/zpxrYw9vJps?si=hHtJw1apdrmavkzv",
+      "user_email": "chiragmutha31@gmail.com",
+      "descriptorPath": "",
+      "analytics": {
+        "totalScans": 1,
+        "countryScans": {
+          "India": 1
+        },
+        "engagementTime": 0.0,
+        "ctaClicks": 1
+      },
+      "metadata": {
+        "keypointsCount": 2048,
+        "fileSize": 0
+      },
+      "createdAt": "2026-03-06T10:26:41.088304+00:00",
+      "_id": "mock_contents_1"
+    },
+    {
+      "contentId": "0812da2d-4ae9-4986-979f-d8c10355991b",
+      "originalImageName": "WhatsApp Image 2026-03-04 at 12.45.52 PM (1).jpeg",
+      "imagePath": "/uploads/images/WhatsApp_Image_2026-03-04_at_12_45_52_PM__1_-1772793406-d261cbbf.jpeg",
+      "videoPath": "https://youtu.be/eJrhBr6dHEg?si=hWEzEDtPTeg1zRud",
+      "videoType": "link",
+      "type": "video",
+      "title": "",
+      "text": "",
+      "url": "https://youtu.be/eJrhBr6dHEg?si=hWEzEDtPTeg1zRud",
+      "user_email": "chiragmutha31@gmail.com",
+      "descriptorPath": "",
+      "analytics": {
+        "totalScans": 0,
+        "countryScans": {},
+        "engagementTime": 0.0,
+        "ctaClicks": 0
+      },
+      "metadata": {
+        "keypointsCount": 2048,
+        "fileSize": 0
+      },
+      "createdAt": "2026-03-06T10:36:56.048364+00:00",
+      "_id": "mock_contents_2"
+    }
+  ],
+  "attached_contents": []
+}

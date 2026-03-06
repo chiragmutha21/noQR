@@ -36,46 +36,37 @@ EMBEDDING_DIM = 2048
 print(f"Embedding model loaded on {_device} (ResNet-50, {EMBEDDING_DIM}-d)")
 
 
-def extract_embedding(image_path: str) -> np.ndarray:
+def extract_embedding(image_source) -> np.ndarray:
     """
-    Extract a 2048-d L2-normalized embedding from an image file.
-
-    Args:
-        image_path: Path to the image file.
-
-    Returns:
-        np.ndarray of shape (EMBEDDING_DIM,) — L2-normalized feature vector.
+    Extract a 2048-d L2-normalized embedding.
+    image_source can be a path (str) or raw bytes.
+    Optimized for speed (< 0.5s per frame).
     """
-    img = Image.open(image_path).convert("RGB")
+    import io
+    if isinstance(image_source, bytes):
+        img = Image.open(io.BytesIO(image_source)).convert("RGB")
+    else:
+        img = Image.open(image_source).convert("RGB")
     
-    # Enhanced image preprocessing for robust recognition (HD-aware)
-    from PIL import ImageEnhance, ImageFilter, ImageOps
-    
-    # 0. Increase resolution for better feature preservation
-    img.thumbnail((1024, 1024), Image.Resampling.LANCZOS)
+    # 1. Faster Resize: Directly to 224x224 using Bilinear (faster than Lanczos)
+    img = img.resize((224, 224), Image.Resampling.BILINEAR)
 
-    # 1. Sharpening: Added to make edges more defined for the neural network
-    img = ImageEnhance.Sharpness(img).enhance(2.0)
-
-    # 2. Mild Gaussian Blur: Keep it very low to only handle minor noise
-    img = img.filter(ImageFilter.GaussianBlur(radius=0.3))
+    # 2. Minimal Enhancements (only the essential ones for AR noise)
+    from PIL import ImageEnhance, ImageOps
     
-    # 3. Histogram Equalization: Normalize colors/brightness
+    # Fast histogram normalization
     img = ImageOps.equalize(img) 
     
-    # 4. Color/Contrast Enhancement: Combat "washed out" camera look
-    img = ImageEnhance.Color(img).enhance(1.2)
-    img = ImageEnhance.Contrast(img).enhance(1.2)
+    # Single pass enhancement
+    img = ImageEnhance.Contrast(img).enhance(1.1)
 
     tensor = _preprocess(img).unsqueeze(0).to(_device)
 
     with torch.no_grad():
         features = _model(tensor)
 
-    # Flatten from (1, 2048, 1, 1) → (2048,)
+    # Flatten and normalize
     embedding = features.squeeze().cpu().numpy().astype(np.float32)
-
-    # L2-normalize so inner product = cosine similarity
     norm = np.linalg.norm(embedding)
     if norm > 0:
         embedding = embedding / norm

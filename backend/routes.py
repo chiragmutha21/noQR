@@ -290,16 +290,8 @@ async def get_all_contents(email: Optional[str] = None):
     results = []
     
     async for doc in cursor:
-        # filter out items where the image file is missing from disk
-        # imagePath is stored as "/uploads/images/foo.jpg"
-        image_path_str = doc.get("imagePath", "")
-        # Remove leading forward slash
-        disk_path = image_path_str.lstrip("/") 
-        
-        # Check if file exists relative to cwd (backend root)
-        if disk_path and os.path.exists(disk_path):
-            doc["_id"] = str(doc.get("_id", ""))
-            results.append(doc)
+        doc["_id"] = str(doc.get("_id", ""))
+        results.append(doc)
             
     return results
 
@@ -584,20 +576,13 @@ async def scan_frame(
     Scan a camera frame for a match in the FAISS index.
     Returns matched content and its attachments.
     """
-    # Save frame temporarily
-    temp_dir = os.path.join(UPLOAD_DIR, "temp_scans")
-    os.makedirs(temp_dir, exist_ok=True)
-    temp_filename = f"scan_{int(datetime.now().timestamp())}_{uuid.uuid4().hex[:8]}.jpg"
-    temp_path = os.path.join(temp_dir, temp_filename)
 
     try:
         content = await frame.read()
-        with open(temp_path, "wb") as f:
-            f.write(content)
 
-        # Extract embedding
+        # Extract embedding from memory (bytes) — VERY FAST
         try:
-            embedding = extract_embedding(temp_path)
+            embedding = extract_embedding(content)
         except Exception as e:
             return ScanResponse(matchFound=False, confidence=0, message=f"Embedding extraction failed: {str(e)}")
 
@@ -616,32 +601,38 @@ async def scan_frame(
             top_score = results[0][1] if results else 0
             return ScanResponse(matchFound=False, confidence=float(top_score), message="This image is not uploaded")
 
-        # Disambiguation via Invisible Watermark
+        # Disambiguation via Invisible Watermark logic
         content_id = None
         final_score = 0
         
-        # Read frame bytes for watermark detection
-        with open(temp_path, "rb") as f:
-            frame_bytes = f.read()
-
-        # Decode watermark bits once (assuming 64-bit suffixes used during upload)
-        detected_bits = wm_manager.detect_bits(frame_bytes, 64)
-
-        # Try to find the candidate that matches the watermark
-        watermark_match_found = False
-        for cand_id, cand_score in candidates:
-            # We expect the last 8 chars of the ID to be the watermark
-            if wm_manager.verify_suffix(detected_bits, cand_id[-8:]):
-                print(f"Watermark verified for {cand_id} (score: {cand_score:.4f})")
-                content_id = cand_id
-                final_score = cand_score
-                watermark_match_found = True
-                break
-        
-        # Fallback: if no watermark is detected or verified
-        if not watermark_match_found:
+        # FAST PATH: If only one strong candidate, skip slow watermark detection
+        if len(candidates) == 1:
             content_id, final_score = candidates[0]
-            print(f"No watermark detected. Falling back to top visual match: {content_id}")
+            print(f"Fast Path: Single visual match found ({content_id})")
+        else:
+            # MULTIPLE CANDIDATES: Perform watermark disambiguation
+            print(f"Disambiguation: {len(candidates)} candidates found, checking watermarks...")
+            
+            # Read frame bytes for watermark detection (already loaded in 'content')
+            frame_bytes = content
+
+            # Decode watermark bits once
+            detected_bits = wm_manager.detect_bits(frame_bytes, 64)
+
+            # Try to find the candidate that matches the watermark
+            watermark_match_found = False
+            for cand_id, cand_score in candidates:
+                if wm_manager.verify_suffix(detected_bits, cand_id[-8:]):
+                    print(f"Watermark verified for {cand_id} (score: {cand_score:.4f})")
+                    content_id = cand_id
+                    final_score = cand_score
+                    watermark_match_found = True
+                    break
+            
+            # Fallback: if no watermark verified, take the top visual match
+            if not watermark_match_found:
+                content_id, final_score = candidates[0]
+                print(f"No watermark verified. Falling back to top visual match: {content_id}")
 
         # Fetch content metadata
         img_col = get_images_collection()
@@ -679,9 +670,7 @@ async def scan_frame(
         )
 
     finally:
-        # Cleanup temp file
-        if os.path.exists(temp_path):
-            os.remove(temp_path)
+        pass # Everything processed in memory
 
 @router.post("/log-cta-click")
 async def log_cta_click(payload: ClickRequest):

@@ -28,10 +28,7 @@ async def lifespan(app: FastAPI):
         os.makedirs(os.path.join(UPLOAD_DIR, sub), exist_ok=True)
     os.makedirs("data", exist_ok=True)
     
-    # Run initial cleanup and schedule periodic one
-    asyncio.create_task(cleanup_orphaned_files())
-    asyncio.create_task(start_periodic_cleanup(3600)) # once per hour
-    
+    # Database is handled here, but cleanup is disabled for safety.
     print("Server ready.")
     yield
     await disconnect_db()

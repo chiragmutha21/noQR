@@ -5,7 +5,7 @@ import os
 
 class WatermarkManager:
     def __init__(self):
-        self.method = 'dwtDctSvd' # More robust than dwtDct
+        self.method = 'dwtDct' # Fast method for real-time response
 
     def embed_id(self, image_data: bytes, content_id: str) -> tuple[bytes, bool]:
         """
