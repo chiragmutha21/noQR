@@ -1,0 +1,235 @@
+# Step 2: Attach Multimedia Content to Image
+
+After completing **Step 1 – Image Fingerprinting** (where a deep learning embedding is extracted and stored), the next step is to link one or more multimedia items to that image. This document details how to design, implement, and validate the content attachment process in a scalable, production‑ready manner.
+
+---
+
+## Overview
+
+Once an image is successfully fingerprinted (its unique embedding is saved in the vector index and its metadata in MongoDB), the user can attach various types of content to it. The system then stores this association, making it retrievable during future real‑time scans.
+
+**Supported content types:**
+- 🎥 Video (URL or file)
+- 🎵 Audio (URL or file)
+- 🖼 Image URL
+- 📝 Text
+- 📄 PDF (optional upgrade)
+
+---
+
+## Database Design (MongoDB)
+
+We use MongoDB to store all metadata and content associations. The actual image embeddings are kept in a separate vector database (FAISS / Milvus) for fast similarity search, but the link between an image and its attached content lives in MongoDB.
+
+### Collections
+
+#### 1. `images` – one document per fingerprinted image
+```json
+{
+  "_id": "64b2f9a123abc",
+  "imageName": "wedding_poster",
+  "embeddingId": "faiss_001",        // reference to vector index entry
+  "keypointCount": 1345,              // optional, for legacy ORB stats
+  "ownerId": "user_123",
+  "createdAt": "2026-02-16T10:00:00Z",
+  "scanCount": 0,
+  "lastScannedAt": null
+}
+2. contents – each attached piece of content
+json
+{
+  "_id": "content_456",
+  "imageId": "64b2f9a123abc",          // reference to images collection
+  "type": "video",                      // video / audio / image / text / pdf
+  "url": "https://cloudinary.com/video.mp4",  // for media types
+  "text": null,                          // for text type
+  "title": "Wedding Invitation",
+  "order": 1,                            // if multiple contents per image
+  "createdAt": "2026-02-16T10:05:00Z"
+}
+3. users (optional) – for ownership and analytics
+json
+{
+  "_id": "user_123",
+  "name": "John Doe",
+  "email": "john@example.com"
+}
+4. scan_logs (optional) – track when and where content was triggered
+json
+{
+  "_id": "log_789",
+  "imageId": "64b2f9a123abc",
+  "contentId": "content_456",
+  "userId": "user_123",
+  "timestamp": "2026-02-16T14:30:00Z",
+  "geoLocation": { "lat": 40.7128, "lng": -74.0060 }
+}
+Storage Strategy for Media Files
+Recommendation: Store only URLs in the database, not the actual file.
+Use cloud object storage for all binary media:
+
+Amazon S3 / Google Cloud Storage / Azure Blob Storage
+
+Cloudinary (optimised for images/videos, with transformations)
+
+Firebase Storage (easy integration with web/mobile)
+
+When a user uploads a video or audio file:
+
+Upload the file to your chosen cloud storage.
+
+Obtain a public or signed URL.
+
+Store that URL in the contents collection.
+
+Why URLs?
+
+Keeps MongoDB documents small and fast.
+
+Offloads bandwidth and processing to specialised services.
+
+Enables CDN delivery for global performance.
+
+Easier backup and migration.
+
+Backend API Endpoint (Node.js / Express Example)
+1. Upload media file to cloud storage (optional step)
+If the user provides a file, first upload it to your cloud provider. Here we use a placeholder function uploadToCloud(file).
+
+2. Attach content metadata
+Endpoint: POST /api/attach-content
+
+Request Body:
+
+json
+{
+  "imageId": "64b2f9a123abc",
+  "contentType": "video",
+  "file": (binary, if uploading a file),
+  "url": "https://example.com/video.mp4",  // if URL is provided directly
+  "text": "Hello world",                   // for text type
+  "title": "Optional title"
+}
+Code:
+
+javascript
+const express = require('express');
+const multer = require('multer');
+const Image = require('./models/Image');
+const Content = require('./models/Content');
+const upload = multer({ dest: 'uploads/' });
+
+app.post('/api/attach-content', upload.single('file'), async (req, res) => {
+  try {
+    const { imageId, contentType, url, text, title } = req.body;
+    const file = req.file;
+
+    // Validate required fields
+    if (!imageId || !contentType) {
+      return res.status(400).json({ error: 'Missing imageId or contentType' });
+    }
+
+    // Check if image exists
+    const image = await Image.findById(imageId);
+    if (!image) {
+      return res.status(404).json({ error: 'Image not found' });
+    }
+
+    // Validate content type
+    const allowedTypes = ['video', 'audio', 'image', 'text', 'pdf'];
+    if (!allowedTypes.includes(contentType)) {
+      return res.status(400).json({ error: 'Invalid content type' });
+    }
+
+    let finalUrl = url;
+
+    // If a file was uploaded, store it in cloud and get URL
+    if (file) {
+      // Implement your cloud upload logic here
+      finalUrl = await uploadToCloud(file);
+    }
+
+    // Create content document
+    const content = new Content({
+      imageId,
+      type: contentType,
+      url: finalUrl,
+      text: contentType === 'text' ? text : null,
+      title: title || '',
+      order: await Content.countDocuments({ imageId }) + 1
+    });
+
+    await content.save();
+
+    res.status(201).json({
+      message: 'Content attached successfully',
+      content
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+3. Validation Rules (Important)
+imageId must exist in the database.
+
+contentType must be one of the allowed values.
+
+If contentType is text, require text field and ignore url.
+
+If contentType is not text, either url must be provided or a file must be uploaded.
+
+File size limits: e.g., 100 MB for videos, 10 MB for images.
+
+Sanitize text to prevent XSS (if displayed in web frontend).
+
+URL format should be validated using regex or a library like validator.
+
+Retrieving Content During a Scan
+When the real‑time scanner detects an image (by matching its embedding), it receives the imageId. The system then queries MongoDB to fetch all associated content:
+
+javascript
+const contents = await Content.find({ imageId }).sort('order');
+if (contents.length > 0) {
+  // Send the list to frontend, which can display the first one or let user choose
+  triggerContent(contents[0]); // or handle multiple
+}
+For a simple use case, you may trigger the first content automatically. For more advanced scenarios, you can show a carousel or let the user select which content to open.
+
+Advanced Features
+Multiple Contents per Image
+Instead of a single content field in the images collection, we use a separate contents collection to allow one‑to‑many relationships. This enables:
+
+Multiple videos / texts attached to the same poster.
+
+Ordered playback (e.g., first a video, then a text message).
+
+A/B testing different content for different audiences.
+
+Content Versioning
+Add a version field to the contents collection. When a user updates content, you create a new document with a higher version number and optionally mark the old one as inactive. The scanner always retrieves the latest active version.
+
+Analytics with Scan Logs
+Every time content is triggered, log the event in scan_logs. This helps you understand:
+
+Which images are scanned most often.
+
+Geographic distribution of scans.
+
+Time‑of‑day patterns.
+
+Popular content types.
+
+You can later use this data to improve the user experience or for marketing insights.
+
+Real‑World Example
+Scenario: A wedding invitation card.
+
+Step 1: The couple uploads a photo of their invitation card. The system fingerprints it and stores an embedding.
+
+Step 2: They attach a video message from the bride and groom (uploaded to Cloudinary) and a text with the wedding date.
+
+During the wedding: Guests scan the card using their phone (webcam). The system recognises the card and instantly plays the video message, followed by displaying the date text.
+
+Analytics: The couple can see how many guests scanned the card and from where.
+
