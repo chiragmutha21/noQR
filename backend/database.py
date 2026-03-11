@@ -22,10 +22,15 @@ async def connect_db():
         client = AsyncIOMotorClient(
             MONGO_URI,
             tlsAllowInvalidCertificates=True,
-            serverSelectionTimeoutMS=2000,
-            connectTimeoutMS=2000
+            serverSelectionTimeoutMS=10000,
+            connectTimeoutMS=10000,
+            retryWrites=True
         )
-        await client.admin.command('ping')
+        # Try a quick ping, but don't fail immediately if it's just a slow cold start
+        try:
+            await asyncio.wait_for(client.admin.command('ping'), timeout=5.0)
+        except:
+            print("MongoDB ping timed out, but continuing to try connection...")
         db = client.get_default_database()
         if db is None: db = client["ar_db"]
         _is_mock = False
@@ -67,7 +72,18 @@ class MockCollection:
         return doc
     def find(self, query=None):
         items = self._load()
-        if query: items = [i for i in items if all(i.get(k) == v for k, v in query.items())]
+        if query:
+            # Case-insensitive filtering for user_email
+            normalized_query = {k: (v.lower().strip() if isinstance(v, str) and k == "user_email" else v) for k, v in query.items()}
+            def matches(item):
+                for k, v in normalized_query.items():
+                    val = item.get(k)
+                    if k == "user_email":
+                        if not val or not isinstance(val, str): return False
+                        if val.lower().strip() != v: return False
+                    elif val != v: return False
+                return True
+            items = [i for i in items if matches(i)]
         class AsyncIter:
             def __init__(self, d): self.d = d; self.i = 0
             def sort(self, k, dir): self.d.sort(key=lambda x: x.get(k, ""), reverse=(dir == -1)); return self

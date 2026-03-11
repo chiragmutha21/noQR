@@ -10,6 +10,8 @@ import {
 import toast from 'react-hot-toast';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useRef } from 'react';
+import Webcam from 'react-webcam';
 
 
 const CONTENT_TYPES = [
@@ -32,6 +34,10 @@ export default function UploadForm() {
     const [uploading, setUploading] = useState(false);
     const [progress, setProgress] = useState(0);
     const [successId, setSuccessId] = useState<string | null>(null);
+
+    // Webcam state
+    const [showWebcam, setShowWebcam] = useState(false);
+    const webcamRef = useRef<Webcam>(null);
 
     const onDropImage = useCallback((acceptedFiles: File[]) => {
         setImage(acceptedFiles[0]);
@@ -59,6 +65,23 @@ export default function UploadForm() {
         maxFiles: 1,
         disabled: contentType === 'text'
     });
+
+    const capture = useCallback(() => {
+        if (!webcamRef.current) return;
+        const imageSrc = webcamRef.current.getScreenshot();
+        if (imageSrc) {
+            // Convert base64 to File object
+            fetch(imageSrc)
+                .then(res => res.blob())
+                .then(blob => {
+                    const file = new File([blob], "captured-target.jpg", { type: "image/jpeg" });
+                    setImage(file);
+                    setShowWebcam(false);
+                    setSuccessId(null);
+                    toast.success("Photo captured!");
+                });
+        }
+    }, [webcamRef]);
 
     const handleSubmit = async () => {
         if (!image) {
@@ -181,17 +204,6 @@ export default function UploadForm() {
                 <div className="space-y-2 sm:space-y-4">
                     <div className="flex items-center justify-between ml-1">
                         <label className="text-[9px] sm:text-sm font-bold text-zinc-500 uppercase tracking-widest">1. Target Image (The trigger)</label>
-                        <button
-                            type="button"
-                            onClick={() => {
-                                const camInput = document.getElementById('camera-input');
-                                if (camInput) camInput.click();
-                            }}
-                            className="flex lg:hidden items-center gap-1 sm:gap-2 px-2 sm:px-4 py-1 sm:py-2 bg-blue-600/10 text-blue-400 rounded-lg sm:rounded-xl text-[8px] sm:text-[10px] font-black uppercase tracking-tighter hover:bg-blue-600/20 transition-all border border-blue-500/10"
-                        >
-                            <Scan className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5" />
-                            Take Photo
-                        </button>
                     </div>
 
                     {/* Hidden input for mobile camera specifically */}
@@ -237,7 +249,12 @@ export default function UploadForm() {
                                 <p className="text-[7px] sm:text-[10px] text-zinc-600 uppercase tracking-[0.2em] mt-1 sm:mt-2 font-medium">PNG, JPG up to 10MB</p>
                                 <div className="mt-2 sm:mt-4 flex flex-wrap justify-center gap-1 sm:gap-2">
                                     <span className="px-2 py-1 sm:px-3 sm:py-1 bg-zinc-800/50 rounded-md sm:rounded-lg text-[7px] sm:text-[9px] font-bold text-zinc-500">BROWSE FILES</span>
-                                    <span className="lg:hidden px-2 py-1 sm:px-3 sm:py-1 bg-blue-500/10 rounded-md sm:rounded-lg text-[7px] sm:text-[9px] font-bold text-blue-500">OPEN CAMERA</span>
+                                    <span
+                                        onClick={(e) => { e.stopPropagation(); setShowWebcam(true); }}
+                                        className="px-2 py-1 sm:px-3 sm:py-1 bg-blue-500/10 rounded-md sm:rounded-lg text-[7px] sm:text-[9px] font-bold text-blue-500"
+                                    >
+                                        OPEN CAMERA
+                                    </span>
                                 </div>
                             </div>
                         )}
@@ -355,6 +372,60 @@ export default function UploadForm() {
                     </>
                 )}
             </button>
+
+            <AnimatePresence>
+                {showWebcam && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-xl flex flex-col items-center justify-center p-4 sm:p-6"
+                    >
+                        <div className="relative w-full max-w-lg aspect-video bg-zinc-950 rounded-[32px] overflow-hidden border border-white/10 shadow-2xl">
+                            <Webcam
+                                audio={false}
+                                ref={webcamRef}
+                                screenshotFormat="image/jpeg"
+                                videoConstraints={{
+                                    facingMode: "environment",
+                                    width: 1280,
+                                    height: 720
+                                }}
+                                className="w-full h-full object-cover"
+                            />
+
+                            {/* Overlay UI */}
+                            <div className="absolute inset-0 flex flex-col justify-between p-4 sm:p-8">
+                                <div className="flex justify-end">
+                                    <button
+                                        onClick={() => setShowWebcam(false)}
+                                        className="p-3 bg-black/40 backdrop-blur-md rounded-full text-white border border-white/10 hover:bg-black/60 transition-colors"
+                                    >
+                                        <X className="w-5 h-5 sm:w-6 sm:h-6" />
+                                    </button>
+                                </div>
+
+                                <div className="flex justify-center">
+                                    <button
+                                        onClick={capture}
+                                        className="w-16 h-16 sm:w-20 sm:h-20 bg-white rounded-full p-1.5 shadow-2xl active:scale-90 transition-transform"
+                                    >
+                                        <div className="w-full h-full rounded-full border-4 border-black/10 flex items-center justify-center">
+                                            <div className="w-12 h-12 sm:w-14 sm:h-14 bg-blue-600 rounded-full flex items-center justify-center text-white">
+                                                <Scan className="w-6 h-6 sm:w-8 sm:h-8" />
+                                            </div>
+                                        </div>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <p className="mt-6 text-zinc-400 text-[10px] sm:text-xs font-bold uppercase tracking-widest flex items-center gap-2">
+                            <Scan className="w-4 h-4 text-blue-500 animate-pulse" />
+                            Align your target image in the frame
+                        </p>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             <AnimatePresence>
                 {successId && (

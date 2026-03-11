@@ -15,12 +15,13 @@ import ScannerDisplay from '@/components/ScannerDisplay';
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:5000';
 
-const SCAN_INTERVAL = 250; // 0.25 seconds for faster "catch"
-const COOLDOWN_TIME = 5000; // 5 seconds pause after detection
+const SCAN_INTERVAL = 250;
+const COOLDOWN_TIME = 5000;
 
 export default function ScanPage() {
     const router = useRouter();
     const webcamRef = useRef<Webcam>(null);
+    const [mounted, setMounted] = useState(false);
 
     // App State
     const [hasLaunched, setHasLaunched] = useState(false);
@@ -40,6 +41,10 @@ export default function ScanPage() {
     const [isPlaying, setIsPlaying] = useState(false);
     const [playbackFailed, setPlaybackFailed] = useState(false);
 
+    useEffect(() => {
+        setMounted(true);
+    }, []);
+
     // Scanning Loop
     const captureAndScan = useCallback(async () => {
         if (!webcamRef.current || !isScanning || scanning || onCooldown || !hasInteracted || !hasLaunched) return;
@@ -49,7 +54,6 @@ export default function ScanPage() {
 
         setScanning(true);
         try {
-            // Convert base64 to Blob
             const res = await fetch(imageSrc);
             const blob = await res.blob();
 
@@ -65,13 +69,11 @@ export default function ScanPage() {
                     confidence: data.confidence
                 });
 
-                // Success feedback
                 toast.success("Image Recognized!", { icon: '✨' });
                 setShowContent(true);
                 setIsScanning(false);
                 setOnCooldown(true);
 
-                // Record as a click since the system gave an output
                 logCtaClick(data.content.contentId).catch(() => { });
             }
         } catch (err) {
@@ -87,7 +89,6 @@ export default function ScanPage() {
     }, [captureAndScan]);
 
     const resetScanner = () => {
-        // Record engagement time before resetting
         if (showContent && lastMatch && startTime) {
             const duration = (Date.now() - startTime) / 1000;
             logEngagement(lastMatch.content.contentId, duration).catch(() => { });
@@ -99,24 +100,19 @@ export default function ScanPage() {
         setTimeout(() => setOnCooldown(false), 2000);
     };
 
-    // Track Engagement Start
     useEffect(() => {
         if (showContent && !startTime) {
             setStartTime(Date.now());
         }
     }, [showContent]);
 
-    // Auto-Open Logic for non-media content
     useEffect(() => {
         if (showContent && lastMatch && lastMatch.content) {
             const { type, url, videoPath } = lastMatch.content;
             const targetUrl = (url || videoPath).startsWith('http') ? (url || videoPath) : `${BACKEND_URL}${url || videoPath}`;
 
-            // If it's a PDF or generic URL (and not a video/image/text/audio that we display inline)
-            // YouTube videos will play in the iframe, so we DO NOT open them in a new tab.
             if (type === 'pdf' || (type !== 'video' && type !== 'image' && type !== 'text' && type !== 'audio')) {
                 toast.success("Opening content...", { icon: '↗️' });
-                // Small delay to ensure UI updates first
                 setTimeout(() => {
                     window.open(targetUrl, '_blank');
                 }, 50);
@@ -124,18 +120,14 @@ export default function ScanPage() {
         }
     }, [showContent, lastMatch]);
 
-    // Ensure media plays when content is shown
     useEffect(() => {
         if (showContent && hasInteracted) {
             setPlaybackFailed(false);
             setIsPlaying(false);
 
-            // Small delay to let the DOM settle and animation finish
             const timer = setTimeout(() => {
                 const mediaElements = document.querySelectorAll('video, audio');
                 if (mediaElements.length === 0 && (lastMatch?.content.type === 'video' || lastMatch?.content.type === 'audio')) {
-                    // It might be a YouTube iframe, which we can't easily probe for 'playing' state
-                    // without the API, so we assume it might work but provide a hit.
                     setIsPlaying(true);
                 }
 
@@ -150,7 +142,6 @@ export default function ScanPage() {
                         }).catch((err: any) => {
                             console.log("Autoplay blocked:", err);
                             setPlaybackFailed(true);
-                            // Try again muted as last resort
                             el.muted = true;
                             el.play().then(() => setIsPlaying(true)).catch(() => { });
                         });
@@ -162,7 +153,6 @@ export default function ScanPage() {
     }, [showContent, hasInteracted, muted]);
 
     const handleManualPlay = () => {
-        // Unmute all media elements
         const mediaElements = document.querySelectorAll('video, audio');
         mediaElements.forEach((el: any) => {
             el.muted = false;
@@ -176,8 +166,6 @@ export default function ScanPage() {
             });
         });
     };
-
-
 
     const fileInputRef = useRef<HTMLInputElement>(null);
     const cameraInputRef = useRef<HTMLInputElement>(null);
@@ -204,7 +192,6 @@ export default function ScanPage() {
                 setIsScanning(false);
                 setOnCooldown(true);
 
-                // Record as a click since the user manually provided image and got output
                 logCtaClick(data.content.contentId).catch(() => { });
             } else {
                 toast.error(data.message || "This image is not uploaded");
@@ -214,10 +201,11 @@ export default function ScanPage() {
             toast.error("Failed to scan image");
         } finally {
             setScanning(false);
-            // Reset input value so same file can be selected again if needed
             e.target.value = '';
         }
     };
+
+    if (!mounted) return null;
 
     return (
         <>
@@ -254,7 +242,6 @@ export default function ScanPage() {
                 </div>
             ) : (
                 <div className="fixed inset-0 bg-black text-white overflow-hidden select-none">
-                    {/* Hidden file input for various trigger points */}
                     <input
                         type="file"
                         accept="image/*"
@@ -263,7 +250,6 @@ export default function ScanPage() {
                         onChange={handleFileUpload}
                     />
 
-                    {/* Hidden camera input for direct capture */}
                     <input
                         type="file"
                         accept="image/*"
@@ -273,7 +259,6 @@ export default function ScanPage() {
                         onChange={handleFileUpload}
                     />
 
-                    {/* ── Background: Camera Feed ────────────────────────────────────── */}
                     <div className="absolute inset-0 z-0">
                         <Webcam
                             audio={false}
@@ -291,7 +276,6 @@ export default function ScanPage() {
                         <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-black/80 pointer-events-none" />
                     </div>
 
-                    {/* ── Top Bar ─────────────────────────────────────────────────── */}
                     <header className="absolute top-0 left-0 p-4 sm:p-6 z-20">
                         <button
                             onClick={() => setHasLaunched(false)}
@@ -301,7 +285,6 @@ export default function ScanPage() {
                         </button>
                     </header>
 
-                    {/* ── Bottom Floating Controls ────────────────────────────────────────── */}
                     <div className="absolute bottom-10 left-0 right-0 flex flex-col items-center gap-4 z-20 pointer-events-none">
                         <div className="flex bg-black/40 backdrop-blur-md px-6 py-2.5 rounded-full border border-white/10 items-center gap-3 pointer-events-auto">
                             <div className={`w-2 h-2 rounded-full ${scanning ? 'bg-blue-500 animate-pulse' : (onCooldown ? 'bg-yellow-500' : 'bg-green-500')}`} />
@@ -336,7 +319,6 @@ export default function ScanPage() {
                         </div>
                     </div>
 
-                    {/* ── Scanning UI ─────────────────────────────────────────────── */}
                     <AnimatePresence>
                         {!showContent && (
                             <motion.div
@@ -345,26 +327,20 @@ export default function ScanPage() {
                                 exit={{ opacity: 0 }}
                                 className="absolute inset-0 flex items-center justify-center pointer-events-none"
                             >
-                                {/* Target Reticle */}
                                 <div className="relative w-64 h-64 md:w-80 md:h-80">
-                                    {/* Corners */}
                                     <div className="absolute top-0 left-0 w-12 h-12 border-t-4 border-l-4 border-white/80 rounded-tl-3xl shadow-[-5px_-5px_20px_rgba(0,0,0,0.5)]"></div>
                                     <div className="absolute top-0 right-0 w-12 h-12 border-t-4 border-r-4 border-white/80 rounded-tr-3xl shadow-[5px_-5px_20px_rgba(0,0,0,0.5)]"></div>
                                     <div className="absolute bottom-0 left-0 w-12 h-12 border-b-4 border-l-4 border-white/80 rounded-bl-3xl shadow-[-5px_5px_20px_rgba(0,0,0,0.5)]"></div>
                                     <div className="absolute bottom-0 right-0 w-12 h-12 border-b-4 border-r-4 border-white/80 rounded-br-3xl shadow-[5px_5px_20px_rgba(0,0,0,0.5)]"></div>
 
-                                    {/* Scanning Active Component */}
                                     <div className={`absolute inset-0 transition-opacity duration-500 ${isScanning ? 'opacity-100' : 'opacity-0'}`}>
-                                        {/* Clean HD Overlay */}
                                         <div className="absolute inset-0 border border-white/5 rounded-3xl" />
                                     </div>
-
                                 </div>
                             </motion.div>
                         )}
                     </AnimatePresence>
 
-                    {/* ── Match Trigger View (Optimized Modal) ─────────────────────── */}
                     <AnimatePresence>
                         {showContent && lastMatch && (
                             <motion.div
@@ -382,7 +358,6 @@ export default function ScanPage() {
                                     className="bg-zinc-900/60 border border-white/10 md:rounded-[40px] overflow-hidden max-w-4xl w-full flex flex-col shadow-[0_0_100px_rgba(0,0,0,0.5)] relative"
                                     onClick={(e) => e.stopPropagation()}
                                 >
-                                    {/* Close button */}
                                     <button
                                         onClick={resetScanner}
                                         className="absolute top-4 right-4 p-3 bg-white/10 hover:bg-white/20 rounded-full text-white transition-colors z-50 backdrop-blur-md"
@@ -390,7 +365,6 @@ export default function ScanPage() {
                                         <X className="w-5 h-5" />
                                     </button>
 
-                                    {/* Main Content Area */}
                                     <div className="relative w-full flex flex-col items-center justify-center p-4 md:p-8 min-h-[40vh]">
                                         {((lastMatch.content.type || 'video') === 'video' || lastMatch.content.type === 'image') ? (
                                             <div className="relative w-full h-full flex items-center justify-center rounded-2xl overflow-hidden shadow-2xl border border-white/5">
@@ -452,7 +426,6 @@ export default function ScanPage() {
                                         )}
                                     </div>
 
-                                    {/* Badge/Info */}
                                     <div className="px-8 py-4 bg-black/40 border-t border-white/5 flex items-center justify-between">
                                         <div className="flex items-center gap-3">
                                             <div className="w-8 h-8 rounded-lg overflow-hidden border border-white/10">
@@ -466,7 +439,6 @@ export default function ScanPage() {
                                         </div>
                                     </div>
 
-                                    {/* Action Button */}
                                     <div className="p-4 md:p-6 bg-black/60">
                                         <button
                                             onClick={resetScanner}
@@ -480,7 +452,6 @@ export default function ScanPage() {
                         )}
                     </AnimatePresence>
 
-                    {/* ── Global Styles ───────────────────────────────────────────── */}
                     <style jsx global>{`
         @keyframes scan {
           0% { top: 10%; opacity: 0; }

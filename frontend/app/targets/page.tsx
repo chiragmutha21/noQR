@@ -188,18 +188,72 @@ export default function TargetsPage() {
                                 </button>
                                 <div className="w-[1px] h-3 sm:h-4 bg-white/5" />
                                 <button
-                                    onClick={() => {
-                                        const imgUrl = `${BACKEND_URL}${item.imagePath}`;
-                                        const link = document.createElement('a');
-                                        link.href = imgUrl;
-                                        link.download = `target-${item.contentId}.jpg`;
-                                        link.click();
+                                    onClick={async () => {
+                                        try {
+                                            const imgUrl = `${BACKEND_URL}${item.imagePath}`;
+                                            const res = await fetch(imgUrl);
+                                            const blob = await res.blob();
+                                            const blobUrl = URL.createObjectURL(blob);
+                                            const link = document.createElement('a');
+                                            link.href = blobUrl;
+                                            link.download = `target-${item.originalImageName || item.contentId}.jpg`;
+                                            document.body.appendChild(link);
+                                            link.click();
+                                            document.body.removeChild(link);
+                                            URL.revokeObjectURL(blobUrl);
+                                            toast.success("Image download started");
+                                        } catch (err) {
+                                            console.error("Download error:", err);
+                                            // Fallback
+                                            window.open(`${BACKEND_URL}${item.imagePath}`, '_blank');
+                                        }
                                     }}
                                     className="flex-1 flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1 py-1 sm:py-2 text-[7px] sm:text-[10px] font-bold text-zinc-400 hover:text-white transition-colors"
                                 >
-                                    <Download className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> <span className="hidden sm:inline">SAVE</span>
+                                    <Download className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> <span className="hidden sm:inline">SAVE IMAGE</span>
                                 </button>
                                 <div className="w-[1px] h-3 sm:h-4 bg-white/5" />
+                                {item.url && !item.url.startsWith('http') ? (
+                                    <>
+                                        <button
+                                            onClick={async () => {
+                                                try {
+                                                    const contentUrl = `${BACKEND_URL}${item.url}`;
+                                                    const res = await fetch(contentUrl);
+                                                    const blob = await res.blob();
+                                                    const blobUrl = URL.createObjectURL(blob);
+                                                    const link = document.createElement('a');
+                                                    link.href = blobUrl;
+                                                    // Extract filename or use contentId
+                                                    const ext = item.url.split('.').pop();
+                                                    link.download = `content-${item.originalImageName?.split('.')[0] || item.contentId}.${ext}`;
+                                                    document.body.appendChild(link);
+                                                    link.click();
+                                                    document.body.removeChild(link);
+                                                    URL.revokeObjectURL(blobUrl);
+                                                    toast.success("Content download started");
+                                                } catch (err) {
+                                                    console.error("Content download error:", err);
+                                                    window.open(`${BACKEND_URL}${item.url}`, '_blank');
+                                                }
+                                            }}
+                                            className="flex-1 flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1 py-1 sm:py-2 text-[7px] sm:text-[10px] font-bold text-green-400 hover:text-green-300 transition-colors"
+                                        >
+                                            <FileText className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> <span className="hidden sm:inline">SAVE FILE</span>
+                                        </button>
+                                        <div className="w-[1px] h-3 sm:h-4 bg-white/5" />
+                                    </>
+                                ) : item.url && item.url.startsWith('http') && (
+                                    <>
+                                        <button
+                                            onClick={() => window.open(item.url, '_blank')}
+                                            className="flex-1 flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1 py-1 sm:py-2 text-[7px] sm:text-[10px] font-bold text-blue-400 hover:text-blue-300 transition-colors"
+                                        >
+                                            <ExternalLink className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> <span className="hidden sm:inline">OPEN LINK</span>
+                                        </button>
+                                        <div className="w-[1px] h-3 sm:h-4 bg-white/5" />
+                                    </>
+                                )}
                                 <button
                                     onClick={() => handleDelete(item._id, item.contentId)}
                                     className="flex-1 flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1 py-1 sm:py-2 text-[7px] sm:text-[10px] font-bold text-red-400/80 hover:text-red-400 transition-colors"

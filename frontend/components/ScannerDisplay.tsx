@@ -86,27 +86,21 @@ const ScannerDisplay: React.FC<ScannerDisplayProps> = ({ post }) => {
 export function convertToEmbedUrl(url: string) {
     if (!url) return '';
 
-    // If it's already an embed link, return as is (but with autoplay params)
+    // If it's already an embed link (even if it's from youtube.com, we'll try to use it)
     if (url.includes('/embed/')) {
-        const base = url.split('?')[0];
+        const base = url.split('?')[0].replace('youtube.com', 'youtube-nocookie.com');
         return `${base}?autoplay=1&mute=0&playsinline=1&enablejsapi=1&rel=0`;
     }
 
     try {
-        // Robust regex for all YouTube formats: watch, youtu.be, shorts, v/, embed/
-        const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|shorts\/)([^#\&\?]*).*/i;
-        const match = url.match(regExp);
+        // More robust YouTube ID extraction for all formats: watch, youtu.be, shorts, v/, embed/
+        const youtubeIdRegex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/|youtube\.com\/shorts\/)([^"&?\/\s]{11})/i;
+        const match = url.match(youtubeIdRegex);
 
-        if (match && match[2].length === 11) {
-            const videoId = match[2];
-            return `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=0&playsinline=1&enablejsapi=1&rel=0`;
-        }
-
-        // Fallback for tricky cases
-        const parsed = new URL(url);
-        if (parsed.hostname.includes("youtube.com")) {
-            const v = parsed.searchParams.get("v");
-            if (v) return `https://www.youtube.com/embed/${v}?autoplay=1&mute=0&playsinline=1&enablejsapi=1&rel=0`;
+        if (match && match[1]) {
+            const videoId = match[1];
+            // Using youtube-nocookie.com for better privacy/compatibility and bypassing some restricted embeds
+            return `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&mute=0&playsinline=1&enablejsapi=1&rel=0`;
         }
 
         return url;

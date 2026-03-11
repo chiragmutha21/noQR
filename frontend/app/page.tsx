@@ -253,9 +253,12 @@ const Dashboard = () => {
                   onClick={() => setSelectedContent(item)}
                 >
                   <img
-                    src={`${BACKEND_URL}${item.imagePath}`}
+                    src={encodeURI(`${BACKEND_URL}${item.imagePath}`)}
                     alt={item.originalImageName}
                     className="w-full h-full object-cover"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = 'https://placehold.co/400x400/18181b/ffffff?text=Missing+Image';
+                    }}
                   />
                   <div className="absolute inset-0 bg-black/20" />
                 </div>
@@ -354,9 +357,12 @@ const Dashboard = () => {
               onClick={e => e.stopPropagation()}
             >
               <img
-                src={`${BACKEND_URL}${selectedContent.imagePath}`}
+                src={encodeURI(`${BACKEND_URL}${selectedContent.imagePath}`)}
                 className="w-full h-full object-cover"
                 alt="Preview"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = 'https://placehold.co/800x800/18181b/ffffff?text=Missing+Image';
+                }}
               />
             </motion.div>
           </motion.div>

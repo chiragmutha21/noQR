@@ -39,18 +39,35 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# CORS — robust configuration
+import socket
+
+def get_local_ip():
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))
+        ip = s.getsockname()[0]
+        s.close()
+        return ip
+    except:
+        return "127.0.0.1"
+
+local_ip = get_local_ip()
+print(f"Dynamic CORS active for: {local_ip}")
+
+# CORS — includes Capacitor mobile origins + web dev origins
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
+        "http://localhost",
+        "capacitor://localhost",
         "http://localhost:3000",
         "http://localhost:3001",
         "http://127.0.0.1:3000",
         "http://127.0.0.1:3001",
-        "http://192.168.1.36:3000",
-        "http://192.168.1.36:3001",
-        "http://192.168.1.36.nip.io:3000",
-        "http://192.168.1.36.nip.io:3001",
+        f"http://{local_ip}:3000",
+        f"http://{local_ip}:3001",
+        f"http://{local_ip}.nip.io:3000",
+        f"http://{local_ip}.nip.io:3001",
     ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -71,7 +88,10 @@ async def global_exception_handler(request: Request, exc: Exception):
         }
     )
 
-app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
+
+# Use absolute path for static files to avoid issues with working directory
+abs_upload_dir = os.path.join(os.getcwd(), UPLOAD_DIR)
+app.mount("/uploads", StaticFiles(directory=abs_upload_dir), name="uploads")
 
 @app.middleware("http")
 async def log_requests(request: Request, call_next):

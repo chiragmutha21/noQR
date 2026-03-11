@@ -242,7 +242,7 @@ async def upload_content(
         "title": title,
         "text": final_text,
         "url": final_url,
-        "user_email": user_email, # Store the uploader's email
+        "user_email": user_email.lower().strip() if user_email else None, # Store normalized email
         "descriptorPath": "",
         "analytics": {
             "totalScans": 0,
@@ -280,10 +280,10 @@ async def get_all_contents(email: Optional[str] = None):
     # Filter by email to ensure private dashboards
     query = {}
     if email:
-        query["user_email"] = email
+        email = email.lower().strip()
+        # Use case-insensitive regex for robustness
+        query["user_email"] = {"$regex": f"^{email}$", "$options": "i"}
     else:
-        # If no email is provided, return empty list (or all if we wanted public, but user asked for private)
-        # Returning empty to satisfy "image seen empty" for unauthenticated/wrongly queried states
         return []
         
     cursor = collection.find(query).sort("createdAt", -1)
